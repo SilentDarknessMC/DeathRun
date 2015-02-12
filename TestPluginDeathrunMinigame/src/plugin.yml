@@ -1,0 +1,11 @@
+name: SDMCDeathRunPlugin
+main: com.silentdarknessmc.deathrun.Main
+description:  >
+              SDMC's DeathRun Plugin
+version: 1.0
+author: SDMC
+
+commands:
+    DeathRun:
+        Usage: /<command>
+        Description: Main DeathRun Command
