@@ -4,9 +4,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import com.silentdarknessmc.deathrun.GameState;
+import com.silentdarknessmc.deathrun.Main;
+import com.silentdarknessmc.deathrun.utils.ChatUtilties;
 import com.silentdarknessmc.deathrun.utils.LocationUtilties;
 
 public class Game {
+	static Player player;
 	
 	private static boolean canStart = false;
 	private static boolean hasStarted = false;
@@ -25,9 +29,23 @@ public class Game {
 			LocationUtilties.teleportToGame(player, Team.getAllTeams().get(i));
 			i++;
 		}
+		
+		Main.playerswaiting.clear();
+		
+		GameState.setState(GameState.IN_GAME);
 	}
 
 	public static void stop(Team team) {
+		Main.deaths.clear();
+		Main.runners.clear();
+		Main.playerswaiting.clear();
+		Main.spectators.clear();
+		Main.vips.clear();
+		
+		ChatUtilties.broadcast("The Deathrun Game Has Now Ended! Thanks For Playing!");
+		
+		GameState.setState(GameState.RESETTING);
+		
 		hasStarted = false;
 		Bukkit.reload();
 	}

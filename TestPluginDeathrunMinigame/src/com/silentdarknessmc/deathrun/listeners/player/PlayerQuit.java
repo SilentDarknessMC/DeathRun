@@ -20,6 +20,7 @@ public class PlayerQuit extends MGListener {
 	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent e) {
+		
 		if (GameState.isState(GameState.IN_LOBBY))
 			Game.setCanStart(Bukkit.getOnlinePlayers().length - 1 >= 2);
 

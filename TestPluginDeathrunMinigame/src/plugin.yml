@@ -9,3 +9,5 @@ commands:
     DeathRun:
         Usage: /<command>
         Description: Main DeathRun Command
+    updatesb:
+        description: Scoreboard Update Command

@@ -10,32 +10,132 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.scoreboard.Team;
 
 import com.silentdarknessmc.deathrun.handlers.Game;
+import com.silentdarknessmc.deathrun.listeners.player.PlayerChat;
 import com.silentdarknessmc.deathrun.listeners.player.PlayerDeath;
 import com.silentdarknessmc.deathrun.listeners.player.PlayerJoin;
+import com.silentdarknessmc.deathrun.listeners.player.PlayerMove;
 import com.silentdarknessmc.deathrun.listeners.player.PlayerQuit;
 
 public class Main extends JavaPlugin implements Listener {
-	
+
+	public static Scoreboard board;
+
 	public static List<Player> vips = new ArrayList<Player>();
+	public static List<Player> runners = new ArrayList<Player>();
+	public static List<Player> deaths = new ArrayList<Player>();
+	public static List<Player> spectators = new ArrayList<Player>();
+	public static List<Player> playerswaiting = new ArrayList<Player>();
 
 	public static Main instance;
 
 	public void onEnable() {
-		Bukkit.getServer().getPluginManager().registerEvents(new PlayerJoin(this), this);
+		Scoreboard();
 		Bukkit.getServer().getPluginManager().registerEvents(new PlayerQuit(this), this);
 		Bukkit.getServer().getPluginManager().registerEvents(new PlayerDeath(this), this);
-		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+		Bukkit.getServer().getPluginManager().registerEvents(new PlayerMove(this), this);
+		Bukkit.getServer().getPluginManager().registerEvents(new PlayerChat(this), this);
+		Bukkit.getServer().getPluginManager().registerEvents(new PlayerJoin(this), this);
+		Bukkit.getServer().getPluginManager().registerEvents(new Signs(), this);
 		Main.instance = this;
 		GameState.setState(GameState.IN_LOBBY);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	public void Scoreboard() {
+
+		ScoreboardManager manager = Bukkit.getScoreboardManager();
+		board = manager.getNewScoreboard();
+
+		Objective objective = board.registerNewObjective("DeathRun", "Minigame");
+		objective.setDisplayName(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]");
+		objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+		Team team = board.registerNewTeam("Team");
+		team.setDisplayName(ChatColor.DARK_AQUA + "");
+
+		int a = Main.runners.size();
+		int b = Main.deaths.size();
+		int c = Main.spectators.size();
+		int d = Main.playerswaiting.size();
+		int e = Main.vips.size();
+		
+		Score blank1 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "......"));
+		blank1.setScore(6);
+		
+		Score runners = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Runners"));
+		runners.setScore(a);
+		
+		Score blank2 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "....."));
+		blank2.setScore(5);
+
+		Score deaths = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Deaths"));
+		deaths.setScore(b);
+		
+		Score blank3 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "...."));
+		blank3.setScore(4);
+
+		Score spectators = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Spectators"));
+		spectators.setScore(c);
+		
+		Score blank4 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "..."));
+		blank4.setScore(3);
+
+		Score pwaiting = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Players Waiting"));
+		pwaiting.setScore(d);
+		
+		Score blank5 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + ".."));
+		blank5.setScore(2);
+
+		Score vips = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "VIPs"));
+		vips.setScore(e);
+		
+		Score blank6 = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "."));
+		blank6.setScore(1);
+	}
+
+	@SuppressWarnings("deprecation")
+	public static void updateScoreboard() {
+		Objective objective = board.registerNewObjective("DeathRun", "Minigame");
+		
+		int a = Main.runners.size();
+		int b = Main.deaths.size();
+		int c = Main.spectators.size();
+		int d = Main.playerswaiting.size();
+		int e = Main.vips.size();
+		
+		Score runners = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Runners"));
+		runners.setScore(a);
+
+		Score deaths = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Deaths"));
+		deaths.setScore(b);
+
+		Score spectators = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Spectators"));
+		spectators.setScore(c);
+
+		Score pwaiting = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Players Waiting"));
+		pwaiting.setScore(d);
+
+		Score vips = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "VIPs"));
+		vips.setScore(e);
+	}
+
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		Player player = (Player) sender;
+		if (label.equalsIgnoreCase("updatesb")) {
+			Scoreboard();
+		}
+		
 		if (label.equalsIgnoreCase("deathrun")) {
 			if(args[0].equalsIgnoreCase("Help")) {
 				player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.YELLOW + " =========================================");
@@ -108,7 +208,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Water1.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Water1.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Water1.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Water1.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Water Location #1!");
 						}
@@ -117,7 +216,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Water2.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Water2.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Water2.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Water2.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Water Location #2!");
 						}
@@ -126,7 +224,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Water3.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Water3.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Water3.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Water3.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Water Location #3!");
 						}
@@ -135,7 +232,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Water4.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Water4.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Water4.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Water4.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Water Location #4!");
 						}
@@ -144,67 +240,17 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Water5.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Water5.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Water5.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Water5.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Water Location #5!");
 						}
 					}
-
-
-					if(args[1].equalsIgnoreCase("Lava")) {
-						if(args[2].equalsIgnoreCase("1")) {
-							Main.instance.getConfig().set("Location.Lava1.x", Integer.valueOf(x));
-							Main.instance.getConfig().set("Location.Lava1.y", Integer.valueOf(y));
-							Main.instance.getConfig().set("Location.Lava1.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Lava1.world", player.getLocation().getWorld());
-							Main.instance.saveConfig();
-							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Lava Location #1!");
-						}
-
-						if(args[2].equalsIgnoreCase("2")) {
-							Main.instance.getConfig().set("Location.Lava2.x", Integer.valueOf(x));
-							Main.instance.getConfig().set("Location.Lava2.y", Integer.valueOf(y));
-							Main.instance.getConfig().set("Location.Lava2.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Lava2.world", player.getLocation().getWorld());
-							Main.instance.saveConfig();
-							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Lava Location #2!");
-						}
-
-						if(args[2].equalsIgnoreCase("3")) {
-							Main.instance.getConfig().set("Location.Lava3.x", Integer.valueOf(x));
-							Main.instance.getConfig().set("Location.Lava3.y", Integer.valueOf(y));
-							Main.instance.getConfig().set("Location.Lava3.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Lava3.world", player.getLocation().getWorld());
-							Main.instance.saveConfig();
-							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Lava Location #3!");
-						}
-
-						if(args[2].equalsIgnoreCase("4")) {
-							Main.instance.getConfig().set("Location.Lava4.x", Integer.valueOf(x));
-							Main.instance.getConfig().set("Location.Lava4.y", Integer.valueOf(y));
-							Main.instance.getConfig().set("Location.Lava4.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Lava4.world", player.getLocation().getWorld());
-							Main.instance.saveConfig();
-							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Lava Location #4!");
-						}
-
-						if(args[2].equalsIgnoreCase("5")) {
-							Main.instance.getConfig().set("Location.Lava5.x", Integer.valueOf(x));
-							Main.instance.getConfig().set("Location.Lava5.y", Integer.valueOf(y));
-							Main.instance.getConfig().set("Location.Lava5.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Lava5.world", player.getLocation().getWorld());
-							Main.instance.saveConfig();
-							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Lava Location #5!");
-						}
-					}
-
-
+					
+					
 					if(args[1].equalsIgnoreCase("BlockDisappear")) {
 						if(args[2].equalsIgnoreCase("1")) {
 							Main.instance.getConfig().set("Location.BlockDisappear1.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.BlockDisappear1.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.BlockDisappear1.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.BlockDisappear1.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The BlockDisappear Location #1!");
 						}
@@ -213,7 +259,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.BlockDisappear2.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.BlockDisappear2.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.BlockDisappear2.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.BlockDisappear2.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The BlockDisappear Location #2!");
 						}
@@ -222,7 +267,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.BlockDisappear3.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.BlockDisappear3.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.BlockDisappear3.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.BlockDisappear3.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The BlockDisappear Location #3!");
 						}
@@ -231,7 +275,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.BlockDisappear4.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.BlockDisappear4.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.BlockDisappear4.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.BlockDisappear4.world", player.getLocation().getWorld());
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The BlockDisappear Location #4!");
 						}
 
@@ -239,7 +282,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.BlockDisappear5.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.BlockDisappear5.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.BlockDisappear5.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.BlockDisappear5.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The BlockDisappear Location #5!");
 						}
@@ -251,7 +293,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Wall1.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Wall1.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Wall1.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Wall1.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Wall Location #1!");
 						}
@@ -260,7 +301,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Wall2.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Wall2.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Wall2.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Wall2.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Wall Location #2!");
 						}
@@ -269,7 +309,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Wall3.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Wall3.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Wall3.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Wall3.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Wall Location #3!");
 						}
@@ -278,7 +317,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Wall4.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Wall4.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Wall4.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Wall4.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Wall Location #4!");
 						}
@@ -287,7 +325,6 @@ public class Main extends JavaPlugin implements Listener {
 							Main.instance.getConfig().set("Location.Wall5.x", Integer.valueOf(x));
 							Main.instance.getConfig().set("Location.Wall5.y", Integer.valueOf(y));
 							Main.instance.getConfig().set("Location.Wall5.z", Integer.valueOf(z));
-							Main.instance.getConfig().set("Location.Wall5.world", player.getLocation().getWorld());
 							Main.instance.saveConfig();
 							player.sendMessage(ChatColor.DARK_AQUA + "[" + ChatColor.GOLD + "Deathrun" + ChatColor.DARK_AQUA + "]" + ChatColor.GOLD + " You Have Set The Wall Location #5!");
 						}
@@ -346,7 +383,9 @@ public class Main extends JavaPlugin implements Listener {
 			if(args[0].equalsIgnoreCase("Start")) {
 				if(player.hasPermission("deathrun.admin")) {
 					if(Bukkit.getOnlinePlayers().length >= 2) {
-							Game.start();
+						Game.start();
+					} else {
+						player.sendMessage(ChatColor.RED + "There Are Not Enough Players To Start The Game!");
 					}
 				}
 				if(!player.hasPermission("deathrun.admin")) {

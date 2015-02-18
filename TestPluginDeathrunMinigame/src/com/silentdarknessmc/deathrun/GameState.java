@@ -3,7 +3,7 @@ package com.silentdarknessmc.deathrun;
 import com.silentdarknessmc.deathrun.GameState;
 
 public enum GameState {
-	IN_LOBBY(true), IN_GAME(false), POST_GAME(false), RESETTING(false);
+	IN_LOBBY(true), IN_INTRO(false), IN_GAME(false), POST_GAME(false), RESETTING(false);
 	
 	private boolean canJoin;
 	private static GameState currentState;

@@ -40,8 +40,6 @@ public class Team {
 	}
 	
 	public boolean remove(Player player) {
-		if (hasTeam(player))
-			return false;
 		playerTeams.remove(player.getName());
 		members.remove(player.getName());
 		if (members.isEmpty()) {
